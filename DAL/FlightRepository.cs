@@ -1,7 +1,7 @@
-﻿using FlightService.DataAccess;
-using FlightService.Model;
+﻿using System.Linq;
 using System.Collections.Generic;
-using System.Linq;
+using FlightService.DataAccess;
+using FlightService.Model;
 
 namespace FlightService.DAL
 {
