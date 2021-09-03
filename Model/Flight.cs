@@ -4,12 +4,12 @@ namespace FlightService.Model
 {
     public class Flight
     {
-        [Key]
-        public int Id { get; set; }
-        public int NumberOfSteats { get; set; }
-        public int MaxBaggageWight { get; set; }
+        public int FlightId { get; set; }
+        [Required]
         public int MaxBagsPerPassenger { get; set; }
+        [Required]
         public int MaxBaggageWeightPerPassenger { get; set; }
+        [Required]
         public string Destination { get; set; }
     }
 }

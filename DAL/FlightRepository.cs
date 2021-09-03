@@ -7,56 +7,24 @@ namespace FlightService.DAL
 {
     public class FlightRepository : IFlightRepository
     {
-        private readonly AppDataContext _db;
+        private readonly AppDbContext _context;
 
-        public FlightRepository(AppDataContext Db)
+        public FlightRepository(AppDbContext context)
         {
-            _db = Db;
+            _context = context;
         }
 
-
-        // All Actions Functions
         public List<Flight> GetAllFlights()
         {
-            return _db.Flights.ToList();
+            return _context.Flights.ToList();
         }
 
         public Flight GetFlightById(int id)
         {
-            return _db.Flights.Find(id);
-        }
-
-        public void InsertDataToPassanger(Passenger passenger)
-        {
-            _db.Passengers.Add(passenger);
-            _db.SaveChanges();
-        }
-        public void InsertDataToBooking(Booking booking)
-        {
-            _db.Bookings.Add(booking);
-            _db.SaveChanges();
+            return _context.Flights.Find(id);
         }
 
 
-        private bool disposed = false;
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    _db.Dispose();
-                }
-                disposed = true;
-            }
-        }
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        
     }
 }

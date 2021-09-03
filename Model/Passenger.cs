@@ -4,8 +4,8 @@ namespace FlightService.Model
 {
     public class Passenger
     {
-        [Key]
-        public int Id { get; set; }
+        public int PassengerId { get; set; }
+
         [Required]
         public string Name { get; set; }
     }

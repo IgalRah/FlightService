@@ -1,201 +1,162 @@
 ﻿using System;
 using FlightService.DAL;
-using FlightService.Utilities;
 using FlightService.Model;
 
 namespace FlightService
 {
     public class EntryPoint
     {
-        private static IFlightRepository _flightRepository;
-        public EntryPoint(IFlightRepository flightRepository)
+        private readonly IFlightRepository _flightRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IPassengerRepository _passengerRepository;
+
+        public EntryPoint(IFlightRepository flightRepository, IBookingRepository bookingRepository, IPassengerRepository passengerRepository)
         {
             _flightRepository = flightRepository;
+            _bookingRepository = bookingRepository;
+            _passengerRepository = passengerRepository;
         }
 
         public void Run()
         {
-            Display.StartMenu();
+            TextColor("\nFlight Booking\n", ConsoleColor.Blue);
 
+            Console.WriteLine("1. Book a flight");
+            Console.WriteLine("2. List flights");
+            Console.WriteLine("0. Close App");
+
+            Console.Write("\nOption: ");
             var option = Console.ReadLine();
             Console.WriteLine();
 
             switch (option)
             {
                 case "0":
-                    Environment.Exit(1);
                     break;
 
                 case "1":
                     {
-                        Console.WriteLine("\nEnter your name: ");
+                        Console.Write("Enter your name: ");
                         var name = Console.ReadLine();
 
                         Console.WriteLine($"\nWelcome {name}!");
 
-                        //_flightRepository.InsertDataToPassanger(new Model.Passenger { Name = name });
+                        var passenger = new Passenger { Name = name };
+                        _passengerRepository.CreatePassenger(passenger);
+
+                        UserMenu(passenger);
                     }
                     break;
 
                 case "2":
                     {
                         var items = _flightRepository.GetAllFlights();
-                        items.ForEach(item =>
-                        { Console.WriteLine($"TLV => {item.Destination}"); });
+                        items.ForEach(item => Console.WriteLine($"TLV => {item.Destination}"));
+
+                        Run();
                     }
                     break;
 
                 default:
                     {
                         Console.WriteLine("Wrong Input!");
+                        Run();
                         break;
                     }
             }
-
-            if (option == "1")
-            {
-                Console.BackgroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("\nFlights Details: \n");
-                Console.ResetColor();
-
-                var flightsToShow = _flightRepository.GetAllFlights();
-                flightsToShow.ForEach(flight =>
-                { Console.WriteLine($"[{flight.Id}] {flight.Destination}:\n{flight.MaxBagsPerPassenger} Bag of {flight.MaxBaggageWeightPerPassenger} Kg || No more than 10 tickets\n"); });
-
-
-                Console.Write("\nChoose flight by Id Number: ");
-                var chooseFlight = int.Parse(Console.ReadLine());
-
-                while (true)
-                {
-                    switch (chooseFlight)
-                    {
-                        case 1:
-                            {
-                                Console.WriteLine($"\nAmount of tickets you'd like to purchase: ");
-                                var amontOfTickets = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage weight: ");
-                                var weightOfBag = int.Parse(Console.ReadLine());
-
-                                if (weightOfBag <= 12 && amontOfTickets <= 10)
-                                {
-                                    _flightRepository.InsertDataToBooking(new Booking {FlightId = chooseFlight, NumberOfBags = 1, BaggageWeight = weightOfBag });
-                                    Success(amontOfTickets, chooseFlight);
-                                    Environment.Exit(1);
-                                }
-                                else
-                                {
-                                    Failure();
-                                }
-                                break;
-                            }
-                        case 2:
-                            {
-                                Console.WriteLine($"\nAmount of tickets you'd like to purchase: ");
-                                var amontOfTickets = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage amount: ");
-                                var amountOfBag = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage weight: ");
-                                var weightOfBag = int.Parse(Console.ReadLine());
-
-                                if (weightOfBag <= 15 && amontOfTickets <= 10 && amountOfBag <= 2)
-
-                                {
-                                    _flightRepository.InsertDataToBooking(new Model.Booking { FlightId = chooseFlight, NumberOfBags = amountOfBag, BaggageWeight = weightOfBag });
-                                    Success(amontOfTickets, chooseFlight);
-                                    Environment.Exit(1);
-                                }
-                                else
-                                {
-                                    Failure();
-                                }
-                                break;
-                            }
-                        case 3:
-                            {
-                                Console.WriteLine($"\nAmount of tickets you'd like to purchase: ");
-                                var amontOfTickets = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage amount: ");
-                                var amountOfBag = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage weight: ");
-                                var weightOfBag = int.Parse(Console.ReadLine());
-
-                                if (weightOfBag <= 10 && amontOfTickets <= 10 && amountOfBag <= 2)
-
-                                {
-                                    _flightRepository.InsertDataToBooking(new Model.Booking { FlightId = chooseFlight, NumberOfBags = amountOfBag, BaggageWeight = weightOfBag });
-                                    Success(amontOfTickets, chooseFlight);
-                                    Environment.Exit(1);
-                                }
-                                else
-                                {
-                                    Failure();
-                                }
-                                break;
-                            }
-                        case 4:
-                            {
-                                Console.WriteLine($"\nAmount of tickets you'd like to purchase: ");
-                                var amontOfTickets = int.Parse(Console.ReadLine());
-
-                                Console.WriteLine($"Baggage weight: ");
-                                var weightOfBag = int.Parse(Console.ReadLine());
-
-                                if (weightOfBag <= 20 && amontOfTickets <= 10)
-
-                                {
-                                    _flightRepository.InsertDataToBooking(new Model.Booking { FlightId = chooseFlight, NumberOfBags = 1, BaggageWeight = weightOfBag });
-                                    Success(amontOfTickets, chooseFlight);
-                                    Environment.Exit(1);
-                                }
-                                else
-                                {
-                                    Failure();
-                                }
-                                break;
-                            }
-                    }
-                }
-            }
-            else
-            {
-                Run();
-            }
         }
-        static void Success(int amount, int idFlight)
+
+        private void UserMenu(Passenger passenger)
         {
-            var infoAbotFlight = _flightRepository.GetFlightById(idFlight);
+            TextColor("\nFlights Details\n", ConsoleColor.Magenta);
 
-            Console.WriteLine();
-            Console.BackgroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine("\nSummery: ");
-            Console.ResetColor();
+            var flightsToShow = _flightRepository.GetAllFlights();
+            flightsToShow.ForEach(flight => Console.WriteLine($"[{flight.FlightId}]: TLV => {flight.Destination}"));
 
-            Console.WriteLine($"Destination: TLV => {infoAbotFlight.Destination}, Tickets: {amount}, Paggage: {infoAbotFlight.MaxBagsPerPassenger} \n" +
-                $"Press Enter to Purchase or '0' to Exit");
+            var flightId = ReadAndParseInt("\nChoose flight by Id: ");
 
-            var answer = Console.ReadLine();
-            if (answer == "0")
+            var flight = _flightRepository.GetFlightById(flightId);
+
+            if (flight == null)
             {
-                Environment.Exit(0);
+                TextColor("\nFlight not exists!", ConsoleColor.DarkRed);
+                UserMenu(passenger);
+                return;
             }
 
-            Console.WriteLine();
-            Console.BackgroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine("Payment Succeeded");
-            Console.ResetColor();
+            Console.WriteLine($"\n{flight.MaxBagsPerPassenger} Bag of {flight.MaxBaggageWeightPerPassenger} Kg (total)\n");
+
+            int amountOfBag;
+            while (true)
+            {
+                amountOfBag = ReadAndParseInt("Baggage amount: ");
+
+                if (amountOfBag <= flight.MaxBagsPerPassenger) break;
+                else TextColor("\nInvalid amount of baggage!", ConsoleColor.DarkRed);
+            }
+
+            int? weightOfBag = null;
+            while (amountOfBag > 0)
+            {
+                weightOfBag = ReadAndParseInt("Baggage weight (total): ");
+
+                if (weightOfBag <= flight.MaxBaggageWeightPerPassenger) break;
+                else TextColor("\nThe baggage is over weight!", ConsoleColor.DarkRed);
+            }
+
+            var booking = new Booking
+            {
+                Flight = flight,
+                NumberOfBags = amountOfBag,
+                BaggageWeight = weightOfBag,
+                Passenger = passenger,
+            };
+            _bookingRepository.CreateBooking(booking);
+
+            Checkout(booking);
+
+            Console.ReadLine();
         }
-        static void Failure()
+
+        void Checkout(Booking booking)
         {
             Console.WriteLine();
-            Console.BackgroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine("The data you entered does not match the requests!");
+            TextColor("Summary", ConsoleColor.DarkYellow);
+
+            Console.WriteLine($"Destination: TLV => {booking.Flight.Destination}\nBaggage: {booking.NumberOfBags}\n");
+
+            Console.WriteLine("Press Enter to book or any other key to cancel");
+
+            if (Console.ReadKey(true).Key != ConsoleKey.Enter)
+            {
+                TextColor("\nOrder has been canceled", ConsoleColor.DarkRed);
+                return;
+            }
+
+            TextColor("\nBooking succeeded", ConsoleColor.DarkGreen);
+        }
+
+        static void TextColor(string str, ConsoleColor consoleColor)
+        {
+            Console.BackgroundColor = consoleColor;
+            Console.WriteLine(str);
             Console.ResetColor();
+        }
+
+        static int ReadAndParseInt(string prompt)
+        {
+            Console.Write(prompt);
+
+            try
+            {
+                var number = int.Parse(Console.ReadLine());
+                return number;
+            }
+            catch
+            {
+                TextColor("\nInvalid input!", ConsoleColor.DarkRed);
+                return ReadAndParseInt(prompt);
+            }
         }
     }
 }
